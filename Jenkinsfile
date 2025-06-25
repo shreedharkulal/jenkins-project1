@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE = 'sonarqube'
+        SONARQUBE = credentials('sonarqube') // secret token from Jenkins credentials
         DOCKER_CREDS = 'docker-cred'
         DOCKER_IMAGE = 'shreedhar13/ultimate-cicd'
     }
@@ -17,7 +17,12 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=jenkins-project1 -Dsonar.host.url=http://13.126.111.204:9000/ -Dsonar.login=$SONARQUBE'
+                    sh '''
+                        mvn clean verify sonar:sonar \
+                          -Dsonar.projectKey=jenkins-project1 \
+                          -Dsonar.host.url=http://13.126.111.204:9000 \
+                          -Dsonar.login=$SONARQUBE
+                    '''
                 }
             }
         }
@@ -47,4 +52,3 @@ pipeline {
         }
     }
 }
-
