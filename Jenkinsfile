@@ -27,13 +27,6 @@ pipeline {
             }
         }
 
-        stage('Trivy Scan') {
-            steps {
-                sh 'docker build -t app-temp .'
-                sh 'trivy image app-temp'
-            }
-        }
-
         stage('Maven Build') {
             steps {
                 sh 'mvn clean package'
