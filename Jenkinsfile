@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+
+    environment {
+        SONARQUBE = 'sonarqube'
+        DOCKER_CREDS = 'docker-cred'
+        DOCKER_IMAGE = 'shreedhar13/ultimate-cicd'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/shreedharkulal/jenkins-project1.git'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=jenkins-project1 -Dsonar.host.url=http://3.108.63.180:9000 -Dsonar.login=$SONARQUBE'
+                }
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                sh 'docker build -t app-temp .'
+                sh 'trivy image app-temp'
+            }
+        }
+
+        stage('Maven Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDS}") {
+                        def image = docker.build("${DOCKER_IMAGE}:latest")
+                        image.push()
+                    }
+                }
+            }
+        }
+    }
+}
+
